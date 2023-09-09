@@ -6,6 +6,7 @@ class UserProfileForm(StatesGroup):
     age = State()
     group = State()
     description = State()
+    images = State()
 
 
 
