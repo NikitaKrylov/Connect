@@ -23,7 +23,8 @@ class Database:
                 team TEXT,
                 description TEXT,
                 isActive INTEGER,
-                image TEXT
+                image TEXT,
+                lang TEXT
             );""")
             self.cursor.execute("""CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,10 +62,10 @@ class Database:
         with self.connection:
             return bool(self.cursor.execute("SELECT * FROM images WHERE id = ?", (id,)).fetchall())
 
-    def create_user(self, id: int, name: str, age: int, team: str, description: str, isActive: int, image: str):
+    def create_user(self, id: int, name: str, age: int, team: str, description: str, isActive: int, image: str, lang: str):
         with self.connection:
             if not self.user_exists(id):
-                self.cursor.execute("INSERT INTO users (id, name, age, team, description, isActive, image) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, name, age, team, description, isActive, image,))
+                self.cursor.execute("INSERT INTO users (id, name, age, team, description, isActive, image, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id, name, age, team, description, isActive, image, lang))
                 return self.cursor.lastrowid
 
     def create_event(self, time_start: str, time_end: str, description: str):
@@ -94,6 +95,10 @@ class Database:
     def get_all_users(self):
         with self.connection:
             return [UserData(*i) for i in self.cursor.execute("SELECT * FROM users").fetchall()]
+
+    def get_users_langs(self):
+        with self.connection:
+            return {id:lang for id, lang in self.cursor.execute("SELECT id, lang FROM users").fetchall()}
 
     def get_all_events(self):
         with self.connection:

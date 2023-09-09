@@ -19,6 +19,7 @@ class UserData:
     description: str
     isActive: int
     image: str
+    lang: str
 
 
 @dataclass
