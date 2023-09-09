@@ -21,6 +21,9 @@ class UserController:
     def check_user_exists(self, _id: int):
         return self.database.user_exists(_id)
 
+    def get_users_langs(self):
+        return self.database.get_users_langs()
+
 
 class EventController:
     def __init__(self, database: Database, *args, **kwargs):

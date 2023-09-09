@@ -18,7 +18,8 @@ class UserData:
     team: str
     description: str
     isActive: int
-    image: str = None
+    image: str
+    lang: str
 
 
 @dataclass

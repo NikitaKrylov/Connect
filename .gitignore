@@ -7,6 +7,8 @@
 /__pycache__/
 .DS_Store
 /.idea/
+/media/
+config.py
 
 
 

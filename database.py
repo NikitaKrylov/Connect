@@ -1,7 +1,4 @@
 import sqlite3
-from sqlite3 import Cursor
-from datetime import datetime
-from models import UserData, EventData
 
 
 class Database:
@@ -23,7 +20,8 @@ class Database:
                 team TEXT,
                 description TEXT,
                 isActive INTEGER,
-                image TEXT
+                image TEXT,
+                lang TEXT DEFAULT "ru"
             );""")
             self.cursor.execute("""CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +29,6 @@ class Database:
                 time_end TEXT, 
                 description TEXT
             );""")
-
 
     def _connect(self):
         try:
@@ -47,9 +44,9 @@ class Database:
         with self.connection:
             return bool(self.cursor.execute("SELECT * FROM users WHERE id = ?", (id,)).fetchall())
 
-    def create_user(self, id: int, name: str, age: int, team: str, description: str, isActive: int, image: str):
+    def create_user(self, id: int, name: str, age: int, team: str, description: str, isActive: int, image: str, lang: str):
         with self.connection:
-            self.cursor.execute("INSERT INTO users (id, name, age, team, description, isActive, image) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, name, age, team, description, isActive, image,))
+            self.cursor.execute("INSERT INTO users (id, name, age, team, description, isActive, image, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id, name, age, team, description, isActive, image, lang,))
             return self.cursor.lastrowid
 
     def get_all_users(self):
@@ -60,9 +57,9 @@ class Database:
         with self.connection:
             self.cursor.execute("DELETE FROM users WHERE id = ?", (id,))
 
-    def update_user(self, id: int, name: str, age: int, team: str, description: str, isActive: int, image: str):
+    def update_user(self, id: int, name: str, age: int, team: str, description: str, isActive: int, image: str, lang: str):
         with self.connection:
-            return self.cursor.execute("UPDATE users SET name=?, age=?, team=?, description=?, isActive=?, image=? WHERE id=?", (name, age, team, description, isActive, image, id,)).lastrowid
+            return self.cursor.execute("UPDATE users SET name=?, age=?, team=?, description=?, isActive=?, image=?, lang=? WHERE id=?", (name, age, team, description, isActive, image, lang, id,)).lastrowid
 
     def create_event(self, time_start: str, time_end: str, description: str):
         with self.connection:
@@ -82,4 +79,7 @@ class Database:
         with self.connection:
             return self.cursor.execute("SELECT * FROM events").fetchall()
 
+    def get_users_langs(self):
+        with self.connection:
+            return {_id: lang for _id, lang in self.cursor.execute("SELECT id, lang FROM users").fetchall()}
 
