@@ -68,6 +68,13 @@ class Database:
                 self.cursor.execute("INSERT INTO users (id, name, age, team, description, isActive, image, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id, name, age, team, description, isActive, image, lang))
                 return self.cursor.lastrowid
 
+            return self._update_user(id, name, age, team, description, image)
+
+
+    def _update_user(self, id: int, name: str, age: int, team: str, description: str, image: str):
+        with self.connection:
+            return self.cursor.execute("UPDATE users SET name=?, age=?, team=?, description=?, image=? WHERE id=?", (name, age, team, description, image, id,)).lastrowid
+
     def create_event(self, time_start: str, time_end: str, description: str):
         with self.connection:
             self.cursor.execute("INSERT INTO events (time_start, time_end, description) VALUES (?, ?, ?)",

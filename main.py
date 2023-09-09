@@ -43,14 +43,13 @@ async def start(message: types.Message):
     await message.answer(translate(show_menu_phrase, message.from_user.id), reply_markup=menu_inline_kb)
 
 
-@dp.message_handler(Text(equals='смотреть', ignore_case=True))
+@dp.message_handler(Text(equals='Искать людей', ignore_case=True))
 async def start(message: types.Message):
     user_data = choice(database.get_all_users())
 
     with open(user_data.image, 'rb') as image:
-        await message.answer_photo(image, translate(f"{user_data.name} {user_data.age} лет \nГруппа: {user_data.team} \n{user_data.description}", message.from_user.id), reply_markup=
+        await message.answer_photo(image, translate(f"{user_data.name} {user_data.age} курс \nГруппа: {user_data.team} \n{user_data.description}", message.from_user.id), reply_markup=
                                    types.InlineKeyboardMarkup().add(types.InlineKeyboardButton(translate(link_tg_profile_phrase, message.from_user.id), url=f"tg://user?id={user_data.id}")))
-    # await message.answer(choice(user_data))
 
 
 @dp.message_handler(commands='cancel', state='*')
