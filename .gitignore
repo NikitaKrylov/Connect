@@ -1,0 +1,13 @@
+# created by virtualenv automatically
+
+/venv/
+*.db
+.idea/modules.xml
+.idea/vcs.xml
+/__pycache__/
+.DS_Store
+/.idea/
+config.py
+
+
+
