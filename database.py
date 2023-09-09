@@ -1,6 +1,7 @@
 import sqlite3
 from sqlite3 import Cursor
 from datetime import datetime
+from models import UserData, EventData, ImageData
 
 class Database:
     connection = None
@@ -17,7 +18,7 @@ class Database:
                 id INTEGER PRIMARY KEY,
                 name TEXT,
                 age INTEGER,
-                group TEXT,
+                teem TEXT,
                 description TEXT,
                 isActive INTEGER
             );""")
@@ -29,9 +30,7 @@ class Database:
             );""")
             self.cursor.execute("""CREATE TABLE IF NOT EXISTS images (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            path TEXT, 
-                            time_end TEXT, 
-                            description TEXT
+                            path TEXT
                         );""")
 
 
@@ -53,11 +52,14 @@ class Database:
     def event_exists(self, id):
         with self.connection:
             return bool(self.cursor.execute("SELECT * FROM events WHERE id = ?", (id,)).fetchall())
-
-    def create_user(self, id: int, name: str, age: int, group: str, description: str, isActive: int):
+    def image_exists(self, id):
         with self.connection:
-            self.cursor.execute("INSERT INTO users (id, name, age, group, description, isActive) VALUES (?, ?, ?, ?, ?, ?)",
-                                (id, name, age, group, description, isActive))
+            return bool(self.cursor.execute("SELECT * FROM images WHERE id = ?", (id,)).fetchall())
+
+    def create_user(self, id: int, name: str, age: int, teem: str, description: str, isActive: int):
+        with self.connection:
+            self.cursor.execute("INSERT INTO users (id, name, age, teem, description, isActive) VALUES (?, ?, ?, ?, ?, ?)",
+                                (id, name, age, teem, description, isActive))
             return self.cursor.lastrowid
 
     def create_event(self, time_start: str, time_end: str, description: str):
@@ -66,4 +68,39 @@ class Database:
                                 (time_start, time_end, description))
             return self.cursor.lastrowid
 
+    def create_image(self, path: str):
+        with self.connection:
+            self.cursor.execute("INSERT INTO images (path) VALUES (?)",
+                                (path,))
+            return self.cursor.lastrowid
 
+    def delete_user(self, id: int):
+        with self.connection:
+            self.cursor.execute("DELETE FROM users WHERE id = ?", (id,))
+
+    def delete_event(self, id: int):
+        with self.connection:
+            self.cursor.execute("DELETE FROM events WHERE id = ?", (id,))
+
+    def delete_image(self, id: int):
+        with self.connection:
+            self.cursor.execute("DELETE FROM images WHERE id = ?", (id,))
+
+    def get_all_users(self):
+        with self.connection:
+            return self.cursor.execute("SELECT * FROM users").fetchall()
+    def get_all_users_dc(self):
+        with self.connection:
+            return [UserData(*i) for i in self.cursor.execute("SELECT * FROM users").fetchall()]
+    def get_all_events(self):
+        with self.connection:
+            return self.cursor.execute("SELECT * FROM events").fetchall()
+    def get_all_events_dc(self):
+        with self.connection:
+            return [EventData(*i) for i in self.cursor.execute("SELECT * FROM events").fetchall()]
+    def get_all_images(self):
+        with self.connection:
+            return self.cursor.execute("SELECT * FROM images").fetchall()
+    def get_all_images_dc(self):
+        with self.connection:
+            return [ImageData(*i) for i in self.cursor.execute("SELECT * FROM images").fetchall()]
