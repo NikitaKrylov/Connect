@@ -67,13 +67,13 @@ class Database:
             if not self.user_exists(id):
                 self.cursor.execute("INSERT INTO users (id, name, age, team, description, isActive, image, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id, name, age, team, description, isActive, image, lang))
                 return self.cursor.lastrowid
+            else:
+                return self._update_user(id, name, age, team, description, image, lang)
 
-            return self._update_user(id, name, age, team, description, image)
 
-
-    def _update_user(self, id: int, name: str, age: int, team: str, description: str, image: str):
+    def _update_user(self, id: int, name: str, age: int, team: str, description: str, image: str, lang: str):
         with self.connection:
-            return self.cursor.execute("UPDATE users SET name=?, age=?, team=?, description=?, image=? WHERE id=?", (name, age, team, description, image, id,)).lastrowid
+            return self.cursor.execute("UPDATE users SET name=?, age=?, team=?, description=?, image=?, lang=? WHERE id=?", (name, age, team, description, image, lang, id)).lastrowid
 
     def create_event(self, time_start: str, time_end: str, description: str):
         with self.connection:
