@@ -1,6 +1,6 @@
 import asyncio
 import logging
-
+from random import choice
 from aiogram.types import ContentType
 from dacite import from_dict
 from aiogram import Bot, Dispatcher, types, executor
@@ -9,6 +9,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command, CommandStart, Text
 
 from config import API_TOKEN, BOT_NAME, MEDIA_PATH
+from database import Database
 from forms import UserProfileForm
 from keyboards import enter_user_form_kb, cancel_reply_kb, main_reply_kb, menu_inline_kb
 from models import UserProfile
@@ -19,6 +20,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
+database = Database()
 
 
 @dp.message_handler(CommandStart())
@@ -26,7 +28,7 @@ async def start(message: types.Message):
     await message.answer(
         f"Привет! \nЯ {BOT_NAME}, бот для поиска новых знакомств в рамках университета МИСИС. \nЯ помогу тебе найти новую компанию друзей или клуб по интересам", reply_markup=main_reply_kb)
     await asyncio.sleep(1)
-    await message.answer("Расскажи немного о себе, чтобы я смог подобрать людей по интересам",
+    await message.answer(f"Расскажи немного о себе, чтобы я смог подобрать людей по интересам",
                          reply_markup=enter_user_form_kb)
 
 
@@ -38,7 +40,12 @@ async def start(message: types.Message):
 
 @dp.message_handler(Text(equals='смотреть', ignore_case=True))
 async def start(message: types.Message):
-    await message.answer("Показываю карточку с событием или человеком")
+    user_data = choice(database.get_all_users())
+
+    with open(user_data.image, 'rb') as image:
+        await message.answer_photo(image, f"{user_data.name} {user_data.age} лет \nГруппа: {user_data.team} \n{user_data.description}", reply_markup=
+                                   types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("Ссылка", url=f"tg://user?id={user_data.id}")))
+    # await message.answer(choice(user_data))
 
 
 @dp.message_handler(commands='cancel', state='*')
@@ -81,9 +88,9 @@ async def process_age(message: types.Message, state: FSMContext):
     await UserProfileForm.next()
 
 
-@dp.message_handler(state=UserProfileForm.group)
-async def process_group(message: types.Message, state: FSMContext):
-    await state.update_data(group=message.text)
+@dp.message_handler(state=UserProfileForm.team)
+async def process_team(message: types.Message, state: FSMContext):
+    await state.update_data(team=message.text)
     await message.answer(f"Отлично, теперь самое главное. Расскажи немного о себе", reply_markup=cancel_reply_kb)
     await UserProfileForm.next()
 
@@ -95,12 +102,13 @@ async def process_description(message: types.Message, state: FSMContext):
     await UserProfileForm.next()
 
 
-@dp.message_handler(content_types=ContentType.PHOTO, state=UserProfileForm.images)
-async def process_group(message: types.Message, state: FSMContext):
+@dp.message_handler(content_types=ContentType.PHOTO, state=UserProfileForm.image)
+async def process_team(message: types.Message, state: FSMContext):
     path = await download_image(MEDIA_PATH, message.photo[-1])
-    await state.update_data(image_path=path)
+    await state.update_data(image=path)
     data = from_dict(UserProfile, await state.get_data())
-    await message.answer(data, reply_markup=main_reply_kb)
+    database.create_user(message.from_user.id, data.name, data.age, data.team, data.description, 1,data.image)
+    await message.answer("Пользователь успешно созданн!", reply_markup=main_reply_kb)
     await state.finish()
 
 
