@@ -1,7 +1,7 @@
 import sqlite3
 from sqlite3 import Cursor
 from datetime import datetime
-from models import UserData, EventData, ImageData
+from models import UserData, EventData
 
 
 class Database:
@@ -31,13 +31,7 @@ class Database:
                 time_end TEXT, 
                 description TEXT
             );""")
-            self.cursor.execute("""CREATE TABLE IF NOT EXISTS images (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            path TEXT
-                        );""")
 
-
-            return self
 
     def _connect(self):
         try:
@@ -53,26 +47,22 @@ class Database:
         with self.connection:
             return bool(self.cursor.execute("SELECT * FROM users WHERE id = ?", (id,)).fetchall())
 
-    def event_exists(self, id):
-        with self.connection:
-            return bool(self.cursor.execute("SELECT * FROM events WHERE id = ?", (id,)).fetchall())
-
-    def image_exists(self, id):
-        with self.connection:
-            return bool(self.cursor.execute("SELECT * FROM images WHERE id = ?", (id,)).fetchall())
-
     def create_user(self, id: int, name: str, age: int, team: str, description: str, isActive: int, image: str):
         with self.connection:
-            if not self.user_exists(id):
-                self.cursor.execute("INSERT INTO users (id, name, age, team, description, isActive, image) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, name, age, team, description, isActive, image,))
-                return self.cursor.lastrowid
+            self.cursor.execute("INSERT INTO users (id, name, age, team, description, isActive, image) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, name, age, team, description, isActive, image,))
+            return self.cursor.lastrowid
 
-            return self._update_user(id, name, age, team, description, image)
-
-
-    def _update_user(self, id: int, name: str, age: int, team: str, description: str, image: str):
+    def get_all_users(self):
         with self.connection:
-            return self.cursor.execute("UPDATE users SET name=?, age=?, team=?, description=?, image=? WHERE id=?", (name, age, team, description, image, id,)).lastrowid
+            return self.cursor.execute("SELECT * FROM users").fetchall()
+
+    def delete_user(self, id: int):
+        with self.connection:
+            self.cursor.execute("DELETE FROM users WHERE id = ?", (id,))
+
+    def update_user(self, id: int, name: str, age: int, team: str, description: str, isActive: int, image: str):
+        with self.connection:
+            return self.cursor.execute("UPDATE users SET name=?, age=?, team=?, description=?, isActive=?, image=? WHERE id=?", (name, age, team, description, isActive, image, id,)).lastrowid
 
     def create_event(self, time_start: str, time_end: str, description: str):
         with self.connection:
@@ -80,32 +70,16 @@ class Database:
                                 (time_start, time_end, description))
             return self.cursor.lastrowid
 
-    def create_image(self, path: str):
+    def event_exists(self, id):
         with self.connection:
-            self.cursor.execute("INSERT INTO images (path) VALUES (?)",
-                                (path,))
-            return self.cursor.lastrowid
-
-    def delete_user(self, id: int):
-        with self.connection:
-            self.cursor.execute("DELETE FROM users WHERE id = ?", (id,))
+            return bool(self.cursor.execute("SELECT * FROM events WHERE id = ?", (id,)).fetchall())
 
     def delete_event(self, id: int):
         with self.connection:
             self.cursor.execute("DELETE FROM events WHERE id = ?", (id,))
 
-    def delete_image(self, id: int):
-        with self.connection:
-            self.cursor.execute("DELETE FROM images WHERE id = ?", (id,))
-
-    def get_all_users(self):
-        with self.connection:
-            return [UserData(*i) for i in self.cursor.execute("SELECT * FROM users").fetchall()]
-
     def get_all_events(self):
         with self.connection:
-            return [EventData(*i) for i in self.cursor.execute("SELECT * FROM events").fetchall()]
+            return self.cursor.execute("SELECT * FROM events").fetchall()
 
-    def get_all_images(self):
-        with self.connection:
-            return [ImageData(*i) for i in self.cursor.execute("SELECT * FROM images").fetchall()]
+

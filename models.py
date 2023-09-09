@@ -18,18 +18,17 @@ class UserData:
     team: str
     description: str
     isActive: int
-    image: str
+    image: str = None
 
 
 @dataclass
 class EventData:
     id: int
+    author_id: int
+    location: str
     time_start: str
-    time_end: str
     description: str
+    invite_link: str
+    time_end: str = None
+    image: str = None
 
-
-@dataclass
-class ImageData:
-    id: int
-    path: str

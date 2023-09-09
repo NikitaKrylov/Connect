@@ -10,6 +10,7 @@ async def download_image(path: str, photo: PhotoSize):
     await photo.download(_path)
     return _path
 
-
+def translate(phrase):
+    return phrase
 
 
