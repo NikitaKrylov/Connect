@@ -8,10 +8,11 @@ cancel_reply_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
     KeyboardButton("Отменить")
 )
 
-main_reply_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
-    KeyboardButton("Смотреть"),
-    KeyboardButton("Меню"),
-
+main_reply_kb = ReplyKeyboardMarkup(resize_keyboard=True).row(
+    KeyboardButton("Искать людей"),
+    KeyboardButton("События"),
+).add(
+    KeyboardButton("Меню")
 )
 
 menu_inline_kb = InlineKeyboardMarkup().row(

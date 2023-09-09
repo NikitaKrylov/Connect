@@ -35,16 +35,16 @@ async def start(message: types.Message):
 @dp.message_handler(commands='menu', state='*')
 @dp.message_handler(Text(equals='меню', ignore_case=True))
 async def start(message: types.Message):
-    await message.answer("Показываю меню", reply_markup=menu_inline_kb)
+    await message.answer("Это меню взаимодействия, здесь перечислены основные комманды", reply_markup=menu_inline_kb)
 
 
-@dp.message_handler(Text(equals='смотреть', ignore_case=True))
+@dp.message_handler(Text(equals='Искать людей', ignore_case=True))
 async def start(message: types.Message):
     user_data = choice(database.get_all_users())
 
     with open(user_data.image, 'rb') as image:
-        await message.answer_photo(image, f"{user_data.name} {user_data.age} лет \nГруппа: {user_data.team} \n{user_data.description}", reply_markup=
-                                   types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("Ссылка", url=f"tg://user?id={user_data.id}")))
+        await message.answer_photo(image, f"{user_data.name} {user_data.age} курс \nГруппа: {user_data.team} \n{user_data.description}", reply_markup=
+                                   types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("Познакомиться", url=f"tg://user?id={user_data.id}")))
     # await message.answer(choice(user_data))
 
 
