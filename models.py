@@ -7,4 +7,5 @@ class UserProfile:
     age: int
     group: str
     description: str
+    image_path: str
 
