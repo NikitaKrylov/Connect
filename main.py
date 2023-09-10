@@ -129,7 +129,7 @@ async def show_users(message: types.Message):
                                     reply_markup=main_reply_kb(message.from_user.id))
 
     user_data = choice(users)
-    await show_user_profile_card(message, user_data)
+    await show_user_profile_card(message, user_data, message.from_user.id)
 
 
 @dp.message_handler(Text(contains='🎇', ignore_case=True))
@@ -141,7 +141,7 @@ async def show_events(message: types.Message):
                                     reply_markup=main_reply_kb(message.from_user.id))
     event = choice(events)
 
-    await show_event_card(message, event)
+    await show_event_card(message, event, message.from_user.id)
 
 
 # выход из любого состояния
@@ -351,33 +351,33 @@ async def show_self_form(callback_query: types.CallbackQuery):
     user = user_controller.get_user(callback_query.from_user.id)
     if user is None:
         return await callback_query.message.answer("Ты еще не созадл анкету 😗")
-    await show_user_profile_card(callback_query.message, user)
+    await show_user_profile_card(callback_query.message, user, callback_query.from_user.id)
 
 
 # ----------------------------Message templates------------------------------------
 
 
-async def show_user_profile_card(message: types.Message, data: UserData):
+async def show_user_profile_card(message: types.Message, data: UserData, user_id: int):
     with open(data.image, 'rb') as image:
         await message.answer_photo(image,
-                                   f"{data.name} \n{data.un_state + ' Курс' if data.un_state in ['2️⃣', '1️⃣', '3️⃣', '4️⃣'] else data.un_state} \nГруппа: {data.team} \n{data.description}",
+                                   f"{data.name} \n{data.un_state + translate('Курс', user_id) if data.un_state in ['2️⃣', '1️⃣', '3️⃣', '4️⃣'] else data.un_state} \n{translate('Группа', user_id)}: {data.team} \n{translate(data.description, user_id)}",
                                    reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton(
-                                       translate(link_tg_profile_phrase, message.from_user.id),
+                                       translate(link_tg_profile_phrase, user_id),
                                        url=f"tg://user?id={data.id}")
                                    )
                                    )
 
 
-async def show_event_card(message: types.Message, data: EventData):
+async def show_event_card(message: types.Message, data: EventData, user_id: int):
     try:
         loc = ast.literal_eval(data.location)
     except (ValueError, SyntaxError):
         with open(data.image, 'rb') as image:
             await message.answer_photo(image,
                                        translate(f"{data.description} \nМесто: {data.location} \nВремя: {data.time}",
-                                                 message.from_user.id),
+                                                 user_id),
                                        reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton(
-                                           translate("Смотреть", message.from_user.id),
+                                           translate("Смотреть", user_id),
                                            url=data.invite_link if data.invite_link[
                                                                        0] != '@' else f"https://t.me/{data.invite_link[1::]}")
                                        ))
@@ -385,14 +385,14 @@ async def show_event_card(message: types.Message, data: EventData):
         with open(data.image, 'rb') as image:
             await message.answer_photo(image,
                                        translate(f"{data.description} \nВремя: {data.time}",
-                                                 message.from_user.id),
+                                                 user_id),
                                        reply_markup=types.InlineKeyboardMarkup().add(types.InlineKeyboardButton(
-                                           translate("Смотреть", message.from_user.id),
+                                           translate("Смотреть", user_id),
                                            url=data.invite_link if data.invite_link[
                                                                        0] != '@' else f"https://t.me/{data.invite_link[1::]}")
                                        ))
 
-            await message.answer(translate("⬇️ *Место проведения* ⬇️", message.from_user.id), parse_mode=ParseMode.MARKDOWN_V2)
+            await message.answer(translate("⬇️ *Место проведения* ⬇️", user_id), parse_mode=ParseMode.MARKDOWN_V2)
             await message.answer_location(loc['latitude'], loc['longitude'], reply_markup=main_reply_kb(message.from_user.id))
 
 
