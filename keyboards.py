@@ -1,10 +1,12 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, KeyboardButtonRequestUser
+from main import translate
 
 cancel_btn = KeyboardButton("Отменить")
 
-enter_user_form_kb = InlineKeyboardMarkup().add(
-    InlineKeyboardButton("Пройти форму", callback_data="start_user_form")
-)
+def enter_user_form_kb(id):
+    return InlineKeyboardMarkup().add(
+        InlineKeyboardButton(translate("Пройти форму", id), callback_data="start_user_form")
+        )
 
 cancel_reply_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
     cancel_btn
@@ -17,13 +19,14 @@ main_reply_kb = ReplyKeyboardMarkup(resize_keyboard=True).row(
     KeyboardButton("Меню")
 )
 
-menu_inline_kb = InlineKeyboardMarkup().row(
-    InlineKeyboardButton("Выключить поиск", callback_data="turn_off_activity"),
-    InlineKeyboardButton("Включить поиск", callback_data="turn_on_activity"),
-).add(
-    InlineKeyboardButton("Перезаполнить форму", callback_data="start_user_form"),
-    InlineKeyboardButton("Создать событие", callback_data="start_event_form")
-)
+def menu_inline_kb(id):
+    return InlineKeyboardMarkup().row(
+    InlineKeyboardButton(translate("Выключить поиск", id), callback_data="turn_off_activity"),
+    InlineKeyboardButton(translate("Включить поиск", id), callback_data="turn_on_activity"),
+    ).add(
+    InlineKeyboardButton(translate("Перезаполнить форму", id), callback_data="start_user_form"),
+    InlineKeyboardButton(translate("Создать событие", id), callback_data="start_event_form")
+    )
 
 period_reply_kb = InlineKeyboardMarkup().add(
 
