@@ -4,7 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class UserProfile:
     name: str
-    age: int
+    un_state: str
     team: str
     description: str
     image: str
@@ -14,7 +14,7 @@ class UserProfile:
 class UserData:
     id: int
     name: str
-    age: int
+    un_state: str
     team: str
     description: str
     isActive: int
@@ -30,5 +30,5 @@ class EventData:
     time: str
     description: str
     invite_link: str
-    image: str = None
+    image: str
 

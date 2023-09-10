@@ -7,4 +7,3 @@ async def download_image(path: str, photo: PhotoSize):
     return _path
 
 
-

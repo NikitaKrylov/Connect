@@ -8,10 +8,10 @@ class UserController:
         self.database = database
 
     def get_user(self, _id: int):
-        pass
+        return UserData(*self.database.get_user(_id))
 
     def get_all_users(self):
-        return [UserData(*i) for i in self.database.get_all_users()]
+        return [UserData(*i) for i in self.database.get_all_active_users()]
 
     def create_user(self, user: UserData):
         if not self.check_user_exists(user.id):
@@ -23,6 +23,13 @@ class UserController:
 
     def get_users_langs(self):
         return self.database.get_users_langs()
+
+    def update_user_lang(self, _id: int, lang: str):
+        self.database.update_user_lang(_id, lang)
+
+    def change_user_activity(self, _id: int, value: int):
+        self.database.change_user_activity(_id, value)
+
 
 
 class EventController:

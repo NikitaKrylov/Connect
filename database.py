@@ -16,7 +16,7 @@ class Database:
             self.cursor.execute("""CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
-                age INTEGER,
+                un_state TEXT,
                 team TEXT,
                 description TEXT,
                 isActive INTEGER,
@@ -47,22 +47,38 @@ class Database:
         with self.connection:
             return bool(self.cursor.execute("SELECT * FROM users WHERE id = ?", (id,)).fetchall())
 
-    def create_user(self, id: int, name: str, age: int, team: str, description: str, isActive: int, image: str, lang: str):
+    def create_user(self, id: int, name: str, un_state: int, team: str, description: str, isActive: int, image: str, lang: str):
         with self.connection:
-            self.cursor.execute("INSERT INTO users (id, name, age, team, description, isActive, image, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id, name, age, team, description, isActive, image, lang,))
+            self.cursor.execute("INSERT INTO users (id, name, un_state, team, description, isActive, image, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id, name, un_state, team, description, isActive, image, lang,))
             return self.cursor.lastrowid
+
+    def get_user(self, _id: int):
+        with self.connection:
+            return self.cursor.execute("SELECT * FROM users WHERE id = ?", (_id,)).fetchone()
+
+    def update_user_lang(self, _id: int, lang: str):
+        with self.connection:
+            self.cursor.execute("UPDATE users SET lang=? WHERE id=?", (lang, _id,))
+
+    def change_user_activity(self, _id: int, value: int):
+        with self.connection:
+            self.cursor.execute("UPDATE users SET isActive=? WHERE id=?", (value, _id,))
 
     def get_all_users(self):
         with self.connection:
             return self.cursor.execute("SELECT * FROM users").fetchall()
 
+    def get_all_active_users(self):
+        with self.connection:
+            return self.cursor.execute("SELECT * FROM users WHERE isActive=1").fetchall()
+
     def delete_user(self, id: int):
         with self.connection:
             self.cursor.execute("DELETE FROM users WHERE id = ?", (id,))
 
-    def update_user(self, id: int, name: str, age: int, team: str, description: str, isActive: int, image: str, lang: str):
+    def update_user(self, id: int, name: str, un_state: int, team: str, description: str, isActive: int, image: str, lang: str):
         with self.connection:
-            return self.cursor.execute("UPDATE users SET name=?, age=?, team=?, description=?, isActive=?, image=?, lang=? WHERE id=?", (name, age, team, description, isActive, image, lang, id,)).lastrowid
+            return self.cursor.execute("UPDATE users SET name=?, un_state=?, team=?, description=?, isActive=?, image=?, lang=? WHERE id=?", (name, un_state, team, description, isActive, image, lang, id,)).lastrowid
 
     def create_event(self, id: int, author_id: int, location: str, time: str, description: str, invite_link: str, image: str):
         with self.connection:
