@@ -301,7 +301,7 @@ async def process_event_image(message: types.Message, state: FSMContext):
         path
     ))
     await state.finish()
-    await message.answer(translate(successfully_event_creation, message.from_user.id), parse_mode=ParseMode.MARKDOWN_V2)
+    await message.answer(translate(successfully_event_creation, message.from_user.id), parse_mode=ParseMode.MARKDOWN_V2, reply_markup=main_reply_kb(message.from_user.id))
 
 
 # ----------------------------Choose language------------------------------------
@@ -349,6 +349,8 @@ async def turn_on_user_activity(callback_query: types.CallbackQuery):
 async def show_self_form(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     user = user_controller.get_user(callback_query.from_user.id)
+    if user is None:
+        return await callback_query.message.answer("Ты еще не созадл анкету 😗")
     await show_user_profile_card(callback_query.message, user)
 
 
@@ -369,7 +371,7 @@ async def show_user_profile_card(message: types.Message, data: UserData):
 async def show_event_card(message: types.Message, data: EventData):
     try:
         loc = ast.literal_eval(data.location)
-    except ValueError:
+    except (ValueError, SyntaxError):
         with open(data.image, 'rb') as image:
             await message.answer_photo(image,
                                        translate(f"{data.description} \nМесто: {data.location} \nВремя: {data.time}",

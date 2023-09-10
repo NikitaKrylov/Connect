@@ -8,7 +8,10 @@ class UserController:
         self.database = database
 
     def get_user(self, _id: int):
-        return UserData(*self.database.get_user(_id))
+        data = self.database.get_user(_id)
+        if data:
+            return UserData(*data)
+        return None
 
     def get_all_users(self):
         return [UserData(*i) for i in self.database.get_all_active_users()]
