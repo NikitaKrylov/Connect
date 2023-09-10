@@ -27,9 +27,8 @@ class EventData:
     id: int
     author_id: int
     location: str
-    time_start: str
+    time: str
     description: str
     invite_link: str
-    time_end: str = None
     image: str = None
 

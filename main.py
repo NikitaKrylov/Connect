@@ -2,19 +2,21 @@ import asyncio
 import logging
 from googletrans import Translator
 from random import choice
-from aiogram.types import ContentType
+from aiogram.types import ContentType, Location
 from dacite import from_dict
 from aiogram import Bot, Dispatcher, types, executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command, CommandStart, Text
+
+from langs import lang_callback
 from phrases import *
 from config import API_TOKEN, BOT_NAME, MEDIA_PATH
-from controllers import UserController
+from controllers import UserController, EventController
 from database import Database
 from forms import UserProfileForm, EventForm
 from keyboards import enter_user_form_kb, cancel_reply_kb, main_reply_kb, menu_inline_kb, location_reply_kb, \
-    self_invite_link_reply_kb, period_selection_reply_kb
+    self_invite_link_reply_kb, period_selection_reply_kb, choose_lang_inline_kb
 from models import UserProfile, EventData, UserData
 from utils import download_image
 
@@ -25,6 +27,7 @@ storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 database = Database()
 user_controller = UserController(database)
+event_controller = EventController(database)
 translator = Translator()
 langs = dict()
 
@@ -56,6 +59,14 @@ async def show_users(message: types.Message):
     with open(user_data.image, 'rb') as image:
         await message.answer_photo(image, translate(f"{user_data.name} {user_data.age} курс \nГруппа: {user_data.team} \n{user_data.description}", message.from_user.id), reply_markup=
                                    types.InlineKeyboardMarkup().add(types.InlineKeyboardButton(translate(link_tg_profile_phrase, message.from_user.id), url=f"tg://user?id={user_data.id}")))
+
+
+@dp.message_handler(Text(equals='События', ignore_case=True))
+async def show_events(message: types.Message):
+    event = choice(event_controller.get_all_events())
+
+    with open(event.image, 'rb') as image:
+        await message.answer_photo(image, translate(f"{event.description} \nМесто: {event.location} \nВремя: {event.time}", message.from_user.id))
 
 
 # выход из любого состояния
@@ -156,15 +167,15 @@ async def process_location(message: types.Message, state: FSMContext):
     if not message.location:
         await state.update_data(location=message.text)
     else:
-        await state.update_data(location=message.location)
+        await state.update_data(location=str(message.location))
 
     await message.answer(translate("В какое время будет проходить мероприятие? \nЕсли време неоднозначно, выбери пункт из меню", message.from_user.id), reply_markup=period_selection_reply_kb)
     await EventForm.next()
 
 
-@dp.message_handler(state=EventForm.period)
+@dp.message_handler(state=EventForm.time)
 async def process_period(message: types.Message, state: FSMContext):
-    await state.update_data(period=message.text)
+    await state.update_data(time=message.text)
     await message.answer(translate("Отправь описание", message.from_user.id))
     await EventForm.next()
 
@@ -185,13 +196,45 @@ async def process_invite_link(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=EventForm.image, content_types=ContentType.PHOTO)
 async def process_event_image(message: types.Message, state: FSMContext):
-    # path = await download_image(MEDIA_PATH, message.photo[-1])
+    path = await download_image(MEDIA_PATH, message.photo[-1])
     # await state.update_data(image=path)
     await message.answer(translate("Все готово!", message.from_user.id))
     state_data = await state.get_data()
-    # data = from_dict(EventData, state_data)
+    state_data['id'] = 0
+    state_data['author_id'] = message.from_user.id
+    data = from_dict(EventData, state_data)
+
+    event_controller.create_event(EventData(
+        0,
+        message.from_user.id,
+        str(data.location),
+        data.time,
+        data.description,
+        data.invite_link,
+        path
+    ))
     await message.answer(state_data, reply_markup=main_reply_kb)
     await state.finish()
+
+
+# ----------------------------Choose language------------------------------------
+
+@dp.message_handler(Text(equals='choose_lang', ignore_case=True))
+@dp.callback_query_handler(lambda clb: clb.data == 'choose_lang')
+async def choose_language_handler(data):
+    if isinstance(data, types.CallbackQuery):
+        await bot.answer_callback_query(data.id)
+    message = data.message if isinstance(data, types.CallbackQuery) else data
+    user_id = data.from_user.id if isinstance(data, types.CallbackQuery) else data.message.from_user.id
+
+    await message.answer(translate("Выбери язык из предложенных", message.from_user.id), reply_markup=choose_lang_inline_kb)
+
+
+@dp.callback_query_handler(lang_callback.filter(command="lang"))
+async def process_choose_lang(callback_query: types.CallbackQuery, callback_data: dict):
+    await callback_query.message.answer(callback_data)
+    langs[callback_query.from_user.id] = callback_data['code']
+    await callback_query.message.answer(translate("Отлично, теперь мы сможем говорить на одном языке!", callback_query.from_user.id))
 
 
 @dp.callback_query_handler(lambda clb: clb.data == 'turn_off_activity')
@@ -204,6 +247,7 @@ async def turn_off_user_activity(callback_query: types.CallbackQuery):
 async def turn_on_user_activity(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     await callback_query.message.answer(translate(is_active_phrase, callback_query.from_user.id), reply_markup=main_reply_kb)
+
 
 if __name__ == '__main__':
     langs = user_controller.get_users_langs()

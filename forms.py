@@ -11,7 +11,7 @@ class UserProfileForm(StatesGroup):
 
 class EventForm(StatesGroup):
     location = State()
-    period = State()
+    time = State()
     description = State()
     invite_link = State()
     image = State()

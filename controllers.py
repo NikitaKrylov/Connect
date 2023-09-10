@@ -1,5 +1,5 @@
 from database import Database
-from models import UserData
+from models import UserData, EventData
 from dataclasses import asdict
 
 
@@ -28,5 +28,17 @@ class UserController:
 class EventController:
     def __init__(self, database: Database, *args, **kwargs):
         self.database = database
+
+    def create_event(self, event: EventData):
+        return self.database.create_event(**asdict(event))
+
+    def get_all_user_events(self, user_id):
+        return [EventData(*i) for i in self.database.get_all_user_events(user_id)]
+
+    def get_all_events(self):
+        return [EventData(*i) for i in self.database.get_all_events()]
+
+    def delete_event(self, _id):
+        self.database.delete_event(_id)
 
 

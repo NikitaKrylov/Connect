@@ -25,9 +25,12 @@ class Database:
             );""")
             self.cursor.execute("""CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                time_start TEXT, 
-                time_end TEXT, 
-                description TEXT
+                author_id INTEGER,
+                location TEXT,
+                time TEXT, 
+                description TEXT,
+                invite_link TEXT,
+                image TEXT
             );""")
 
     def _connect(self):
@@ -61,11 +64,15 @@ class Database:
         with self.connection:
             return self.cursor.execute("UPDATE users SET name=?, age=?, team=?, description=?, isActive=?, image=?, lang=? WHERE id=?", (name, age, team, description, isActive, image, lang, id,)).lastrowid
 
-    def create_event(self, time_start: str, time_end: str, description: str):
+    def create_event(self, id: int, author_id: int, location: str, time: str, description: str, invite_link: str, image: str):
         with self.connection:
-            self.cursor.execute("INSERT INTO events (time_start, time_end, description) VALUES (?, ?, ?)",
-                                (time_start, time_end, description))
+            self.cursor.execute("INSERT INTO events (author_id, location, time, description, invite_link, image) VALUES (?, ?, ?, ?, ?, ?)",
+                                (author_id, location, time, description, invite_link, image))
             return self.cursor.lastrowid
+
+    def get_all_user_events(self, user_id: int):
+        with self.connection:
+            return self.cursor.execute("SELECT * FROM events WHERE author_id = ?", (user_id,)).fetchall()
 
     def event_exists(self, id):
         with self.connection:
