@@ -1,7 +1,5 @@
 import asyncio
 import logging
-
-import typing_extensions
 from aiogram.utils.callback_data import CallbackData
 from googletrans import Translator
 from random import choice
@@ -111,7 +109,6 @@ def cancel_reply_kb(_id: int):
 
 @dp.message_handler(CommandStart())
 async def start(message: types.Message):
-    # langs[message.from_user.id] = 'en'
     await message.answer(translate(welcome_phrase, message.from_user.id) + '\n\n' + lang_annotation,
                          reply_markup=main_reply_kb(message.from_user.id), parse_mode=ParseMode.MARKDOWN_V2)
     await asyncio.sleep(1)
@@ -217,7 +214,6 @@ async def process_description(message: types.Message, state: FSMContext):
 async def process_image(message: types.Message, state: FSMContext):
     path = await download_image(MEDIA_PATH, message.photo[-1])
     await state.update_data(image=path)
-    # print(await state.get_data())
     data = from_dict(UserProfile, await state.get_data())
     user_controller.create_user(
         UserData(
@@ -395,10 +391,6 @@ async def process_delete_user_event(callback_query: types.CallbackQuery, callbac
 
 @dp.callback_query_handler(mevent_callback.filter(command="show"))
 async def process_show_user_event(callback_query: types.CallbackQuery, callback_data: dict):
-    print(callback_data)
-    print(database.get_event(int(callback_data['event_id'])))
-    print(database.get_all_user_events(callback_query.from_user.id))
-
     await bot.answer_callback_query(callback_query.id)
     data = event_controller.get_event(int(callback_data['event_id']))
     await show_event_card(callback_query.message, data, callback_query.from_user.id)
