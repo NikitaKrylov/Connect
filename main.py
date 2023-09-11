@@ -1,5 +1,8 @@
 import asyncio
 import logging
+
+import typing_extensions
+from aiogram.utils.callback_data import CallbackData
 from googletrans import Translator
 from random import choice
 from aiogram.types import ContentType, Location, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode, \
@@ -31,6 +34,7 @@ user_controller = UserController(database)
 event_controller = EventController(database)
 translator = Translator()
 langs = dict()
+mevent_callback = CallbackData("cmd", "command", "event_id", "user_id")
 
 
 def translate(phrase, _id):
@@ -58,6 +62,8 @@ def menu_inline_kb(id):
         InlineKeyboardButton(translate("🧑‍🎓 Моя анкета", id), callback_data="self_form")
     ).add(
         InlineKeyboardButton("🔠 Select language", callback_data="choose_lang")
+    ).add(
+        InlineKeyboardButton("📓 Мои записи", callback_data="show_event_list")
     )
 
 
@@ -155,7 +161,8 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 
     logging.info('Cancelling state %r', current_state)
     await state.finish()
-    await message.answer(translate(break_creating_phrase, message.from_user.id), reply_markup=main_reply_kb(message.from_user.id))
+    await message.answer(translate(break_creating_phrase, message.from_user.id),
+                         reply_markup=main_reply_kb(message.from_user.id))
 
 
 # ----------------------------Обработка формы пользователя------------------------------------
@@ -163,7 +170,8 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(lambda clb: clb.data == 'start_user_form')
 async def start_user_form_handler(callback_query: types.CallbackQuery):
     await callback_query.message.answer(translate(recreate_profile_phrase, callback_query.from_user.id),
-                                        reply_markup=cancel_reply_kb(callback_query.from_user.id), parse_mode=ParseMode.MARKDOWN_V2)
+                                        reply_markup=cancel_reply_kb(callback_query.from_user.id),
+                                        parse_mode=ParseMode.MARKDOWN_V2)
     await bot.answer_callback_query(callback_query.id)
     await UserProfileForm.name.set()
 
@@ -181,7 +189,8 @@ async def process_name(message: types.Message, state: FSMContext):
 async def process_university_state(message: types.Message, state: FSMContext):
     message.text = translator.translate(message.text, 'ru').text
     await state.update_data(un_state=message.text)
-    await message.answer(translate(whot_is_u_group_phrase, message.from_user.id), reply_markup=cancel_reply_kb(message.from_user.id),
+    await message.answer(translate(whot_is_u_group_phrase, message.from_user.id),
+                         reply_markup=cancel_reply_kb(message.from_user.id),
                          parse_mode=ParseMode.MARKDOWN_V2)
     await UserProfileForm.next()
 
@@ -189,7 +198,8 @@ async def process_university_state(message: types.Message, state: FSMContext):
 @dp.message_handler(state=UserProfileForm.team)
 async def process_team(message: types.Message, state: FSMContext):
     await state.update_data(team=message.text)
-    await message.answer(translate(tell_about_yousalf, message.from_user.id), reply_markup=cancel_reply_kb(message.from_user.id),
+    await message.answer(translate(tell_about_yousalf, message.from_user.id),
+                         reply_markup=cancel_reply_kb(message.from_user.id),
                          parse_mode=ParseMode.MARKDOWN_V2)
     await UserProfileForm.next()
 
@@ -198,7 +208,8 @@ async def process_team(message: types.Message, state: FSMContext):
 async def process_description(message: types.Message, state: FSMContext):
     message.text = translator.translate(message.text, 'ru').text
     await state.update_data(description=message.text)
-    await message.answer(translate(select_ava_phrase, message.from_user.id), reply_markup=cancel_reply_kb(message.from_user.id))
+    await message.answer(translate(select_ava_phrase, message.from_user.id),
+                         reply_markup=cancel_reply_kb(message.from_user.id))
     await UserProfileForm.next()
 
 
@@ -220,7 +231,8 @@ async def process_image(message: types.Message, state: FSMContext):
             langs.get(message.from_user.id, 'ru')
         )
     )
-    await message.answer(translate(successfully_user_creation, message.from_user.id), reply_markup=main_reply_kb(message.from_user.id),
+    await message.answer(translate(successfully_user_creation, message.from_user.id),
+                         reply_markup=main_reply_kb(message.from_user.id),
                          parse_mode=ParseMode.MARKDOWN_V2)
     await state.finish()
 
@@ -247,14 +259,16 @@ async def process_location(message: types.Message, state: FSMContext):
 
     await message.answer(
         translate(event_time_question,
-                  message.from_user.id), reply_markup=period_selection_reply_kb(message.from_user.id), parse_mode=ParseMode.MARKDOWN_V2)
+                  message.from_user.id), reply_markup=period_selection_reply_kb(message.from_user.id),
+        parse_mode=ParseMode.MARKDOWN_V2)
     await EventForm.next()
 
 
 @dp.message_handler(state=EventForm.time)
 async def process_period(message: types.Message, state: FSMContext):
     await state.update_data(time=message.text)
-    await message.answer(translate(tell_about_event, message.from_user.id), reply_markup=cancel_reply_kb(message.from_user.id),
+    await message.answer(translate(tell_about_event, message.from_user.id),
+                         reply_markup=cancel_reply_kb(message.from_user.id),
                          parse_mode=ParseMode.MARKDOWN_V2)
     await EventForm.next()
 
@@ -262,7 +276,8 @@ async def process_period(message: types.Message, state: FSMContext):
 @dp.message_handler(state=EventForm.description)
 async def process_description(message: types.Message, state: FSMContext):
     await state.update_data(description=message.text)
-    await message.answer(translate(event_link_question, message.from_user.id), reply_markup=cancel_reply_kb(message.from_user.id),
+    await message.answer(translate(event_link_question, message.from_user.id),
+                         reply_markup=cancel_reply_kb(message.from_user.id),
                          parse_mode=ParseMode.MARKDOWN_V2)
     await EventForm.next()
 
@@ -301,7 +316,8 @@ async def process_event_image(message: types.Message, state: FSMContext):
         path
     ))
     await state.finish()
-    await message.answer(translate(successfully_event_creation, message.from_user.id), parse_mode=ParseMode.MARKDOWN_V2, reply_markup=main_reply_kb(message.from_user.id))
+    await message.answer(translate(successfully_event_creation, message.from_user.id), parse_mode=ParseMode.MARKDOWN_V2,
+                         reply_markup=main_reply_kb(message.from_user.id))
 
 
 # ----------------------------Choose language------------------------------------
@@ -334,7 +350,8 @@ async def turn_off_user_activity(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     user_controller.change_user_activity(callback_query.from_user.id, 0)
     await callback_query.message.answer(translate(is_n_active_phrase, callback_query.from_user.id),
-                                        reply_markup=main_reply_kb(callback_query.from_user.id), parse_mode=ParseMode.MARKDOWN_V2)
+                                        reply_markup=main_reply_kb(callback_query.from_user.id),
+                                        parse_mode=ParseMode.MARKDOWN_V2)
 
 
 @dp.callback_query_handler(lambda clb: clb.data == 'turn_on_activity')
@@ -342,7 +359,8 @@ async def turn_on_user_activity(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     user_controller.change_user_activity(callback_query.from_user.id, 1)
     await callback_query.message.answer(translate(is_active_phrase, callback_query.from_user.id),
-                                        reply_markup=main_reply_kb(callback_query.from_user.id), parse_mode=ParseMode.MARKDOWN_V2)
+                                        reply_markup=main_reply_kb(callback_query.from_user.id),
+                                        parse_mode=ParseMode.MARKDOWN_V2)
 
 
 @dp.callback_query_handler(lambda clb: clb.data == 'self_form')
@@ -354,7 +372,45 @@ async def show_self_form(callback_query: types.CallbackQuery):
     await show_user_profile_card(callback_query.message, user, callback_query.from_user.id)
 
 
+@dp.callback_query_handler(lambda clb: clb.data == "show_event_list")
+async def show_event_list(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    events = event_controller.get_all_user_events(callback_query.from_user.id)
+
+    if not events:
+        return await callback_query.message.answer(translate("🫙 У вас еще нет записей", callback_query.from_user.id))
+
+    await callback_query.message.answer(translate(f"⬇️Всего записей: {len(events)}⬇️", callback_query.from_user.id))
+    for event in events:
+        await show_user_events_miniature(callback_query.message, event, callback_query.from_user.id)
+
+
+@dp.callback_query_handler(mevent_callback.filter(command="delete"))
+async def process_delete_user_event(callback_query: types.CallbackQuery, callback_data: dict):
+    await bot.answer_callback_query(callback_query.id)
+    event_controller.delete_event(callback_data['event_id'])
+    await callback_query.message.delete()
+    await callback_query.answer(translate("✅Событие удалено", callback_query.from_user.id))
+
+
+@dp.callback_query_handler(mevent_callback.filter(command="show"))
+async def process_show_user_event(callback_query: types.CallbackQuery, callback_data: dict):
+    print(callback_data)
+    print(database.get_event(int(callback_data['event_id'])))
+    print(database.get_all_user_events(callback_query.from_user.id))
+
+    await bot.answer_callback_query(callback_query.id)
+    data = event_controller.get_event(int(callback_data['event_id']))
+    await show_event_card(callback_query.message, data, callback_query.from_user.id)
+
 # ----------------------------Message templates------------------------------------
+
+
+async def show_user_events_miniature(message: types.Message, data: EventData, user_id: int):
+    await message.answer(translate(f"{data.description} \nВремя: {data.time}", user_id), reply_markup=InlineKeyboardMarkup().add(
+        InlineKeyboardButton(translate("🗑️ Удалить", user_id), callback_data=mevent_callback.new("delete", data.id, user_id)),
+        InlineKeyboardButton(translate("ℹ️ Смотреть", user_id), callback_data=mevent_callback.new("show", data.id, user_id)),
+    ))
 
 
 async def show_user_profile_card(message: types.Message, data: UserData, user_id: int):
@@ -393,7 +449,8 @@ async def show_event_card(message: types.Message, data: EventData, user_id: int)
                                        ))
 
             await message.answer(translate("⬇️ *Место проведения* ⬇️", user_id), parse_mode=ParseMode.MARKDOWN_V2)
-            await message.answer_location(loc['latitude'], loc['longitude'], reply_markup=main_reply_kb(message.from_user.id))
+            await message.answer_location(loc['latitude'], loc['longitude'],
+                                          reply_markup=main_reply_kb(message.from_user.id))
 
 
 if __name__ == '__main__':

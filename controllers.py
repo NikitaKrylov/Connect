@@ -48,6 +48,9 @@ class EventController:
     def get_all_events(self):
         return [EventData(*i) for i in self.database.get_all_events()]
 
+    def get_event(self, _id: int):
+        return EventData(*self.database.get_event(_id))
+
     def delete_event(self, _id):
         self.database.delete_event(_id)
 

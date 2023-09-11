@@ -94,6 +94,10 @@ class Database:
         with self.connection:
             return bool(self.cursor.execute("SELECT * FROM events WHERE id = ?", (id,)).fetchall())
 
+    def get_event(self, _id: int):
+        with self.connection:
+            return self.cursor.execute("SELECT * FROM events WHERE id = ?", (_id,)).fetchone()
+
     def delete_event(self, id: int):
         with self.connection:
             self.cursor.execute("DELETE FROM events WHERE id = ?", (id,))
